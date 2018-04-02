@@ -11,21 +11,11 @@ import (
 )
 
 func main() {
+	pf := fmt.Printf
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		panic(err)
 	}
-
-	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
-	if err != nil {
-		panic(err)
-	}
-
-	pf := fmt.Printf
-	for _, container := range containers {
-		pf("%s %s\n", container.ID[:10], container.Image)
-	}
-
 	evtOptions := types.EventsOptions{
 		Since: time.Now().Format(time.RFC3339),
 	}
@@ -40,7 +30,7 @@ func main() {
 		case evt := <-evtMsgChan:
 			pf("Received Event: Type=%s, Action=%s\n", evt.Type, evt.Action)
 
-			if evt.Type != "abc" {
+			if evt.Type != "abc" { // FIXME: evt.Type == "node" && evt.Action == "create"
 				pf("Rebalancing node...\n")
 
 				services, svcListErr := cli.ServiceList(context.Background(), types.ServiceListOptions{})
@@ -52,11 +42,11 @@ func main() {
 				for _, eachSvc := range services {
 					pf("Found service %s (%s)\n", eachSvc.Spec.Annotations.Name, eachSvc.ID)
 
+					// FIXME: Docker API error
 					svcID := eachSvc.ID
-					swarmVersion := swarm.Version{
-						Index: 19,
-					}
-					updateResp, updateErr := cli.ServiceUpdate(context.Background(), svcID, swarmVersion, swarm.ServiceSpec{}, types.ServiceUpdateOptions{})
+					swarmVersion := swarm.Version{Index: 19}
+					serviceSpec := eachSvc.Spec
+					updateResp, updateErr := cli.ServiceUpdate(context.Background(), svcID, swarmVersion, serviceSpec, types.ServiceUpdateOptions{})
 					if updateErr != nil {
 						pf("Service Update Error: %s\n", updateErr)
 						continue
