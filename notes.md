@@ -40,3 +40,20 @@ Spec: {
 // }
 
 ```
+
+## FIXME: Docker API Error
+```go
+ "github.com/docker/docker/api/types/swarm" // import
+```
+
+```go
+svcID := eachSvc.ID
+swarmVersion := swarm.Version{Index: 19}
+serviceSpec := eachSvc.Spec
+updateResp, updateErr := cli.ServiceUpdate(context.Background(), svcID, swarmVersion, serviceSpec, types.ServiceUpdateOptions{})
+if updateErr != nil {
+	pf("Service Update Error: %s\n", updateErr)
+	continue
+}
+pf("Service Update Response: %s\n", updateResp)
+```
